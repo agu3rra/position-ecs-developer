@@ -17,7 +17,7 @@ Build a minimal backend service that exposes RESTful endpoints to:
 - (Bonus) Implement a basic CI workflow (e.g., GitHub Actions) to lint and test your code.
 
 ## Deliverables
-- Source code in a new branch of this repository (i.e.: `exercise/your-branch`).
+- Completed exercise source code in a new branch of this repository (i.e.: `exercise/your-branch`). To be submitted as a pull request.
 - A README with:
     - Setup and run instructions.
     - Example API requests and responses.
