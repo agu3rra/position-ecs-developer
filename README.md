@@ -33,4 +33,4 @@ Build a minimal backend service that exposes RESTful endpoints to:
 - Bonus: Infrastructure as Code and CI/CD pipeline.
 
 > [!NOTE]
-> Estimated time to complete: 3–4 hours. You may use any programming language and frameworks you are comfortable with.
+> Estimated time to complete: 3–4 hours. You may use any programming language and frameworks you are comfortable with. It's ok if you don't complete every single ask in this exercise.
