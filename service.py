@@ -89,5 +89,43 @@ def get_file():
 		})
 
 
+@app.route('/get_presigned', methods=['GET'])
+#@token_required
+def get_file_presigned_url():
+	cloud_provider = request.args.get('provider', default="AWS")
+	file_name = request.args.get('file', default=None)
+
+	if file_name is None:
+		return jsonify({
+			'status': 'fail',
+			'message': 'no file name',
+			'provider': cloud_provider,
+			'file': None
+		})
+
+	# handle provider
+	if cloud_provider == "AWS":
+		file_url = get_presigned_url("cristiano-sap-test", key=file_name, aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY, region_name=REGION)
+
+		if file_url is not None:
+			return file_url
+
+		else:
+			return jsonify({
+				'status': 'fail',
+				'message': 'file not found',
+				'provider': cloud_provider,
+				'file': file_name
+			})
+
+	else:
+		return jsonify({
+			'status': 'fail',
+			'message': 'unsupported provider',
+			'provider': cloud_provider,
+			'file': file_name
+		})
+
+
 if __name__ == '__main__':
 	app.run(debug=True, port=8000)
