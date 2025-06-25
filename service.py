@@ -1,31 +1,54 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os
+
 from flask import Flask, jsonify, request, abort
 from aws_utils import *
+from authentication import *
 
 app = Flask(__name__)
 
+AWS_ACCESS_KEY = "AKIATKOFBMPZ5EVIUWES"
+AWS_SECRET_KEY = "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"
+AWS_REGION = "sa-east-1"
 
-# Hardcoded token for demonstration purposes
-API_TOKEN = "TOKEN"
 
-ACCESS_KEY = "AKIATKOFBMPZ5EVIUWES"
-SECRET_KEY = "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"
-REGION = "sa-east-1"
+@app.route('/register', methods=['POST'])
+@token_required
+@requires_role('admin')
+def register():
+	data = request.get_json()
+	username = data.get('username')
+	password = data.get('password')
+	roles = data.get('roles', ['user'])
 
-def token_required(f):
-	def decorated_function(*args, **kwargs):
-		token = request.headers.get("Authorization")
-		if not token or token != f"Bearer {API_TOKEN}":
-			abort(401, description="Unauthorized: Invalid or missing token")
-		return f(*args, **kwargs)
-	decorated_function.__name__ = f.__name__
-	return decorated_function
+	if not username or not password:
+		abort(400, description="Username and password required")
+
+	if add_user(username, password, roles):
+		return jsonify({"message": "User registered!"})
+	else:
+		abort(400, description="User already exists")
+
+
+@app.route('/login', methods=['POST'])
+def login():
+	data = request.get_json()
+	username = data.get('username')
+	password = data.get('password')
+	user = get_user(username)
+
+	if user and user['password'] == password:
+		token = generate_token(user['id'], user['roles'])
+		return jsonify({'token': token})
+
+	else:
+		abort(401, description="Invalid credentials")
 
 
 @app.route('/list', methods=['GET'])
-#@token_required
+@token_required
 def list_files():
 
 	# Accept query parameters
@@ -33,7 +56,7 @@ def list_files():
 
 	# handle provider
 	if cloud_provider == "AWS":
-		files = list_s3_files("cristiano-sap-test", prefix='', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY, region_name=REGION)
+		files = list_s3_files("cristiano-sap-test", prefix='', aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY, region_name=AWS_REGION)
 
 	else:
 		return jsonify({
@@ -52,7 +75,7 @@ def list_files():
 
 
 @app.route('/get', methods=['GET'])
-#@token_required
+@token_required
 def get_file():
 	# Accept query parameters
 	cloud_provider = request.args.get('provider', default="AWS")
@@ -68,7 +91,7 @@ def get_file():
 
 	# handle provider
 	if cloud_provider == "AWS":
-		file_object = get_s3_file("cristiano-sap-test", key=file_name, aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY, region_name=REGION)
+		file_object = get_s3_file("cristiano-sap-test", key=file_name, aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY, region_name=AWS_REGION)
 
 		if file_object is not None:
 			return file_object
@@ -90,7 +113,7 @@ def get_file():
 
 
 @app.route('/get_presigned', methods=['GET'])
-#@token_required
+@token_required
 def get_file_presigned_url():
 	cloud_provider = request.args.get('provider', default="AWS")
 	file_name = request.args.get('file', default=None)
@@ -105,7 +128,7 @@ def get_file_presigned_url():
 
 	# handle provider
 	if cloud_provider == "AWS":
-		file_url = get_presigned_url("cristiano-sap-test", key=file_name, aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY, region_name=REGION)
+		file_url = get_presigned_url("cristiano-sap-test", key=file_name, aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY, region_name=AWS_REGION)
 
 		if file_url is not None:
 			return file_url
@@ -128,4 +151,10 @@ def get_file_presigned_url():
 
 
 if __name__ == '__main__':
+	# Check if SQLite db exists. Create it otherwise
+	if not os.path.exists(DATABASE):
+		init_db()
+		add_user('admin', 'adminpass', ['admin', 'user'])
+		add_user('user', 'userpass', ['user'])
+
 	app.run(debug=True, port=8000)

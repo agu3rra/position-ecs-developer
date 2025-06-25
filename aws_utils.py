@@ -1,7 +1,6 @@
 import boto3
 from botocore.exceptions import ClientError
 
-
 def get_s3_file(bucket_name, key, aws_access_key_id=None, aws_secret_access_key=None, region_name=None):
 	"""
 	Download a file from AWS S3 and return its content as bytes.
