@@ -209,4 +209,4 @@ if __name__ == '__main__':
 		add_user('admin', 'adminpass', ['admin', 'user'])
 		add_user('user', 'userpass', ['user'])
 
-	app.run(debug=True, port=SERVER_PORT)
+	app.run(debug=True, host="0.0.0.0", port=SERVER_PORT)
