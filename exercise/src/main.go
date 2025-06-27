@@ -241,7 +241,8 @@ func getPresignedURLHandler(c *gin.Context) {
 		Key:    aws.String(fileName),
 	})
 
-	urlStr, err := req.Presign(3600)
+	// 15 minutes to expire
+	urlStr, err := req.Presign(15 * time.Minute)
 	log.Println(urlStr)
 
 	if err != nil {
